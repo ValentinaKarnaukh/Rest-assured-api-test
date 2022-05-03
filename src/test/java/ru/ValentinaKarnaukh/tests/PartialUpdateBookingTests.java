@@ -5,28 +5,56 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.ValentinaKarnaukh.dao.Bookingdates;
+import ru.ValentinaKarnaukh.dao.CreateBookingRequest;
+import ru.ValentinaKarnaukh.dao.CreateTokenRequest;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
+
+import static io.restassured.RestAssured.baseURI;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
 public class PartialUpdateBookingTests {
+    private static final String PROPERTIES_FILE_PATH = "src/test/resources/application.properties";
+    private static CreateTokenRequest request;
+    private static Bookingdates requestBookingDates;
+    private static CreateBookingRequest requestCreateBooking;
+    static Properties properties = new Properties();
     static String token;
     static String id;
     @BeforeAll
-    static void beforeAll() {
+    static void beforeAll() throws IOException {
+        properties.load(new FileInputStream(PROPERTIES_FILE_PATH));
+        baseURI = properties.getProperty("base.url");
+        requestBookingDates = Bookingdates.builder()
+                .checkin("2018-01-01")
+                .checkout("2019-01-01")
+                .build();
+        request = CreateTokenRequest.builder()
+                .username("admin")
+                .password("password123")
+                .build();
+        requestCreateBooking = CreateBookingRequest.builder()
+                .firstname("Jim")
+                .lastname("Brown")
+                .totalprice(Integer.valueOf("111"))
+                .depositpaid(Boolean.valueOf("true"))
+                .bookingdates(requestBookingDates)
+                .additionalneeds("Breakfast")
+                .build();
         token = given()
                 .log()
                 .all()
                 .header("Content-Type", "application/json")
-                .body("{\n" +
-                        "    \"username\" : \"admin\",\n" +
-                        "    \"password\" : \"password123\"\n" +
-                        "}")
+                .body(request)
                 .expect()
                 .statusCode(200)
                 .body("token", is(Matchers.not(nullValue())))
                 .when()
-                .post("https://restful-booker.herokuapp.com/auth")
+                .post(baseURI+"auth")
                 .prettyPeek()
                 .body()
                 .jsonPath()
@@ -40,21 +68,11 @@ public class PartialUpdateBookingTests {
                 .log()
                 .all()
                 .header("Content-Type", "application/json")
-                .body("{\n" +
-                        "    \"firstname\" : \"Jim\",\n" +
-                        "    \"lastname\" : \"Brown\",\n" +
-                        "    \"totalprice\" : 111,\n" +
-                        "    \"depositpaid\" : true,\n" +
-                        "    \"bookingdates\" : {\n" +
-                        "        \"checkin\" : \"2018-01-01\",\n" +
-                        "        \"checkout\" : \"2019-01-01\"\n" +
-                        "    },\n" +
-                        "    \"additionalneeds\" : \"Breakfast\"\n" +
-                        "}")
+                .body(requestCreateBooking)
                 .expect()
                 .statusCode(200)
                 .when()
-                .post("https://restful-booker.herokuapp.com/booking")
+                .post(baseURI+"booking")
                 .prettyPeek()
                 .body()
                 .jsonPath()
@@ -73,7 +91,7 @@ public class PartialUpdateBookingTests {
                 .body()
                 .header("Authorization", "Basic YWRtaW46cGFzc3dvcmQxMjM=")
                 .when()
-                .delete("https://restful-booker.herokuapp.com/booking/" + id)
+                .delete(baseURI+"booking/"+ id)
                 .prettyPeek()
                 .then()
                 .statusCode(201);
@@ -92,7 +110,7 @@ public class PartialUpdateBookingTests {
                         "    \"firstname\" : \"Jane\"\n" +
                         "}")
                 .when()
-                .patch("https://restful-booker.herokuapp.com/booking/" + id)
+                .patch(baseURI+"booking/" + id)
                 .prettyPeek()
                 .then()
                 .statusCode(200)
@@ -119,7 +137,7 @@ public class PartialUpdateBookingTests {
                         "    \"additionalneeds\" : \"Breakfast\"\n" +
                         "}")
                 .when()
-                .patch("https://restful-booker.herokuapp.com/booking/"+ id)
+                .patch(baseURI+"booking/"+ id)
                 .prettyPeek()
                 .then()
                 .statusCode(200)
@@ -152,7 +170,7 @@ public class PartialUpdateBookingTests {
                         "    \"additionalneeds\" : \"Breakfast\"\n" +
                         "}")
                 .when()
-                .patch("https://restful-booker.herokuapp.com/booking/"+ id)
+                .patch(baseURI+"booking/"+ id)
                 .prettyPeek()
                 .then()
                 .statusCode(200)
@@ -179,7 +197,7 @@ public class PartialUpdateBookingTests {
                         "    \"additionalneeds\" : \"Breakfast, lunch, dinner\"\n" +
                         "}")
                 .when()
-                .patch("https://restful-booker.herokuapp.com/booking/"+ id)
+                .patch(baseURI+"booking/"+ id)
                 .prettyPeek()
                 .then()
                 .statusCode(200)
@@ -206,7 +224,7 @@ public class PartialUpdateBookingTests {
                         "        \"checkout\" : \"2022-02-22\"\n" +
                         "}")
                 .when()
-                .patch("https://restful-booker.herokuapp.com/booking/" + id)
+                .patch(baseURI+"booking/" + id)
                 .prettyPeek()
                 .then()
                 .statusCode(400);
@@ -225,7 +243,7 @@ public class PartialUpdateBookingTests {
 
                         "}")
                 .when()
-                .patch("https://restful-booker.herokuapp.com/booking/"+ id)
+                .patch(baseURI+"booking/"+ id)
                 .prettyPeek()
                 .then()
                 .statusCode(400);
