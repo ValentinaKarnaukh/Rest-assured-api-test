@@ -81,7 +81,7 @@ public class CreateTokenTests {
     }
 
     @Test
-    void createTokenWithAWrongUsernameAndPasswordNegativeTest() {
+    void createTokenWithAWrongUsernameNegativeTest() {
         Response response = given()
                 .log()
                 .method()
@@ -90,10 +90,7 @@ public class CreateTokenTests {
                 .log()
                 .body()
                 .header("Content-Type", "application/json")
-                .body("{\n" +
-                        "    \"username\" : \"admin123\",\n" +
-                        "    \"password\" : \"password\"\n" +
-                        "}")
+                .body(request.withUsername("admin123"))
                 .when()
                 .post(baseURI+"auth")
                 .prettyPeek();
