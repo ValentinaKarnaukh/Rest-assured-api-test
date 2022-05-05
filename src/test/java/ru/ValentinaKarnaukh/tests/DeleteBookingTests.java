@@ -1,46 +1,34 @@
 package ru.ValentinaKarnaukh.tests;
 
-import io.restassured.RestAssured;
+import io.qameta.allure.*;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import ru.ValentinaKarnaukh.dao.Bookingdates;
 import ru.ValentinaKarnaukh.dao.CreateBookingRequest;
 import ru.ValentinaKarnaukh.dao.CreateTokenRequest;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Properties;
 
 import static io.restassured.RestAssured.baseURI;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 
-
-public class DeleteBookingTests {
-    private static final String PROPERTIES_FILE_PATH = "src/test/resources/application.properties";
-    private static CreateTokenRequest request;
-    private static Bookingdates requestBookingDates;
-    private static CreateBookingRequest requestCreateBooking;
-    static Properties properties = new Properties();
-    static String token;
-    String id;
-
+@Severity(SeverityLevel.BLOCKER)
+@DisplayName("Delete a booking")
+@Story("Delete a booking")
+@Feature("Tests for booking deletion")
+public class DeleteBookingTests extends BaseTest {
     @BeforeAll
-
-    static void beforeAll() throws IOException {
-        properties.load(new FileInputStream(PROPERTIES_FILE_PATH));
-        baseURI = properties.getProperty("base.url");
-        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
-        requestBookingDates = Bookingdates.builder()
-                .checkin("2018-01-01")
-                .checkout("2019-01-01")
-                .build();
+    static void beforeSuite() {
         request = CreateTokenRequest.builder()
                 .username("admin")
                 .password("password123")
+                .build();
+        requestBookingDates = Bookingdates.builder()
+                .checkin("2018-01-01")
+                .checkout("2019-01-01")
                 .build();
         requestCreateBooking = CreateBookingRequest.builder()
                 .firstname("Jim")
@@ -59,7 +47,7 @@ public class DeleteBookingTests {
                 .statusCode(200)
                 .body("token", is(Matchers.not(nullValue())))
                 .when()
-                .post(baseURI+"auth")
+                .post(baseURI + "auth")
                 .prettyPeek()
                 .body()
                 .jsonPath()
@@ -77,7 +65,7 @@ public class DeleteBookingTests {
                 .expect()
                 .statusCode(200)
                 .when()
-                .post(baseURI+"booking")
+                .post(baseURI + "booking")
                 .prettyPeek()
                 .body()
                 .jsonPath()
@@ -85,42 +73,49 @@ public class DeleteBookingTests {
                 .toString());
     }
 
-
-
     @Test
+    @DisplayName("Delete a booking with authorization via cookie (P)")
+    @Description("Positive test - delete a booking with authorization via cookie")
+    @Step("Delete a booking with authorization via cookie")
     void deleteBookingPositiveTest() {
         given()
                 .log()
                 .all()
-                .header("Cookie","token=" +token)
+                .header("Cookie", "token=" + token)
                 .when()
-                .delete(baseURI+"booking/"+ id)
+                .delete(baseURI + "booking/" + id)
                 .prettyPeek()
                 .then()
                 .statusCode(201);
     }
 
     @Test
+    @DisplayName("Delete a booking with authorization via token (P)")
+    @Description("Positive test - delete a booking with authorization via token")
+    @Step("Delete a booking with authorization via token")
     void deleteBookingWithAuthorizationPositiveTest() {
         given()
                 .log()
                 .all()
-                .header("Authorization","Basic YWRtaW46cGFzc3dvcmQxMjM=")
+                .header("Authorization", "Basic YWRtaW46cGFzc3dvcmQxMjM=")
                 .when()
-                .delete(baseURI+"booking/"+ id)
+                .delete(baseURI + "booking/" + id)
                 .prettyPeek()
                 .then()
                 .statusCode(201);
     }
 
     @Test
+    @DisplayName("Delete a booking without authorization (N)")
+    @Description("Negative test - delete a booking without authorization")
+    @Step("Delete a booking without authorization")
     void deleteBookingWithoutAuthorizationNegativeTest() {
         given()
                 .log()
                 .all()
-                .header("","")
+                .header("", "")
                 .when()
-                .delete(baseURI+"booking/"+ id)
+                .delete(baseURI + "booking/" + id)
                 .prettyPeek()
                 .then()
                 .statusCode(403);

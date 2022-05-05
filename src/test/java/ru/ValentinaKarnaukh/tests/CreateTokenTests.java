@@ -1,42 +1,34 @@
 package ru.ValentinaKarnaukh.tests;
 
-import io.restassured.RestAssured;
+import io.qameta.allure.*;
 import io.restassured.response.Response;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import ru.ValentinaKarnaukh.dao.CreateTokenRequest;
 import ru.ValentinaKarnaukh.dao.CreateTokenResponse;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Properties;
 
 import static io.restassured.RestAssured.baseURI;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-
-public class CreateTokenTests {
-    private static final String PROPERTIES_FILE_PATH = "src/test/resources/application.properties";
-    private static CreateTokenRequest request;
-    static Properties properties = new Properties();
-
-
+@Severity(SeverityLevel.BLOCKER)
+@DisplayName("Create token")
+@Feature("Generate a token")
+@Story("Generate a user token")
+public class CreateTokenTests extends BaseTest{
     @BeforeAll
-    static void beforeAll() throws IOException {
-        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
-
+    static void beforeSuite() {
         request = CreateTokenRequest.builder()
                 .username("admin")
                 .password("password123")
                 .build();
-
-        properties.load(new FileInputStream(PROPERTIES_FILE_PATH));
-        baseURI = properties.getProperty("base.url");
     }
-
     @Test
+    @DisplayName("Creation token (P)")
+    @Description("Positive test - Create token")
+    @Step("Create token")
     void createTokenPositiveTest() {
         CreateTokenResponse response = given()
                 .log()
@@ -60,6 +52,9 @@ public class CreateTokenTests {
     }
 
     @Test
+    @DisplayName("Creation token with wrong password (N)")
+    @Description("Negative test - Create a token with a wrong password")
+    @Step("Create token with wrong password")
     void createTokenWithAWrongPasswordNegativeTest() {
         given()
                 .log()
@@ -75,13 +70,16 @@ public class CreateTokenTests {
                 .prettyPeek()
                 .then()
                 .statusCode(200)
-        .body("reason", CoreMatchers.equalTo("Bad credentials"));
+                .body("reason", CoreMatchers.equalTo("Bad credentials"));
 
 
     }
 
     @Test
-    void createTokenWithAWrongUsernameAndPasswordNegativeTest() {
+    @DisplayName("Creation token with wrong username (N)")
+    @Description("Negative test - Create a token with a wrong username")
+    @Step("Create token with wrong username")
+    void createTokenWithAWrongUsernameNegativeTest() {
         Response response = given()
                 .log()
                 .method()
@@ -90,10 +88,7 @@ public class CreateTokenTests {
                 .log()
                 .body()
                 .header("Content-Type", "application/json")
-                .body("{\n" +
-                        "    \"username\" : \"admin123\",\n" +
-                        "    \"password\" : \"password\"\n" +
-                        "}")
+                .body(request.withUsername("admin123"))
                 .when()
                 .post(baseURI+"auth")
                 .prettyPeek();

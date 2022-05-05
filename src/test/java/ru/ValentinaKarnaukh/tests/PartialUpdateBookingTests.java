@@ -1,34 +1,22 @@
 package ru.ValentinaKarnaukh.tests;
 
+import io.qameta.allure.*;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import ru.ValentinaKarnaukh.dao.Bookingdates;
 import ru.ValentinaKarnaukh.dao.CreateBookingRequest;
 import ru.ValentinaKarnaukh.dao.CreateTokenRequest;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Properties;
-
 import static io.restassured.RestAssured.baseURI;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
-
-public class PartialUpdateBookingTests {
-    private static final String PROPERTIES_FILE_PATH = "src/test/resources/application.properties";
-    private static CreateTokenRequest request;
-    private static Bookingdates requestBookingDates;
-    private static CreateBookingRequest requestCreateBooking;
-    static Properties properties = new Properties();
-    static String token;
-    static String id;
+@Severity(SeverityLevel.BLOCKER)
+@DisplayName("Updating information booking")
+@Story("Updating information booking")
+@Feature("Tests for update information booking")
+public class PartialUpdateBookingTests extends BaseTest{
     @BeforeAll
-    static void beforeAll() throws IOException {
-        properties.load(new FileInputStream(PROPERTIES_FILE_PATH));
-        baseURI = properties.getProperty("base.url");
+    static void beforeSuite() {
         requestBookingDates = Bookingdates.builder()
                 .checkin("2018-01-01")
                 .checkout("2019-01-01")
@@ -99,6 +87,9 @@ public class PartialUpdateBookingTests {
 
 
     @Test
+    @DisplayName("Update firstname in booking, authorization - cookie (P)")
+    @Description("Positive test - update firstname in booking, authorization - cookie")
+    @Step("Update firstname in booking, authorization - cookie")
     void firstnameUpdateBookingPositiveTest() {
         given()
                 .log()
@@ -106,9 +97,7 @@ public class PartialUpdateBookingTests {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .header("Cookie", "token=" + token)
-                .body("{\n" +
-                        "    \"firstname\" : \"Jane\"\n" +
-                        "}")
+                .body(requestCreateBooking.withFirstname("Jane"))
                 .when()
                 .patch(baseURI+"booking/" + id)
                 .prettyPeek()
@@ -118,6 +107,9 @@ public class PartialUpdateBookingTests {
     }
 
     @Test
+    @DisplayName("Update lastname in booking, authorization - cookie (P)")
+    @Description("Positive test - update lastname in booking, authorization - cookie")
+    @Step("Update lastname in booking, authorization - cookie")
     void lastnameUpdateBookingPositiveTest() {
         given()
                 .log()
@@ -125,17 +117,7 @@ public class PartialUpdateBookingTests {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .header("Cookie","token=" + token)
-                .body("{\n" +
-                        "    \"firstname\" : \"Jim\",\n" +
-                        "    \"lastname\" : \"Carry\",\n" +
-                        "    \"totalprice\" : 111,\n" +
-                        "    \"depositpaid\" : true,\n" +
-                        "    \"bookingdates\" : {\n" +
-                        "        \"checkin\" : \"2018-01-01\",\n" +
-                        "        \"checkout\" : \"2019-01-01\"\n" +
-                        "    },\n" +
-                        "    \"additionalneeds\" : \"Breakfast\"\n" +
-                        "}")
+                .body(requestCreateBooking.withLastname("Carry"))
                 .when()
                 .patch(baseURI+"booking/"+ id)
                 .prettyPeek()
@@ -151,6 +133,9 @@ public class PartialUpdateBookingTests {
     }
 
     @Test
+    @DisplayName("Update checkin in booking, authorization - cookie (P)")
+    @Description("Positive test - update checkin in booking, authorization - cookie")
+    @Step("Update checkin in booking, authorization - cookie")
     void checkInUpdateBookingPositiveTest() {
         given()
                 .log()
@@ -158,17 +143,7 @@ public class PartialUpdateBookingTests {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .header("Cookie","token=" + token)
-                .body("{\n" +
-                        "    \"firstname\" : \"Jim\",\n" +
-                        "    \"lastname\" : \"Brown\",\n" +
-                        "    \"totalprice\" : 111,\n" +
-                        "    \"depositpaid\" : true,\n" +
-                        "    \"bookingdates\" : {\n" +
-                        "        \"checkin\" : \"2018-12-29\",\n" +
-                        "        \"checkout\" : \"2019-01-01\"\n" +
-                        "    },\n" +
-                        "    \"additionalneeds\" : \"Breakfast\"\n" +
-                        "}")
+                .body(requestCreateBooking.withBookingdates(requestBookingDates.withCheckin("2018-12-29")))
                 .when()
                 .patch(baseURI+"booking/"+ id)
                 .prettyPeek()
@@ -178,6 +153,9 @@ public class PartialUpdateBookingTests {
     }
 
     @Test
+    @DisplayName("Update all booking, authorization - token (P)")
+    @Description("Positive test - update all booking, authorization - token")
+    @Step("Update all booking, authorization - token")
     void allUpdateBookingPositiveTest() {
         given()
                 .log()
@@ -185,17 +163,12 @@ public class PartialUpdateBookingTests {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .header("Authorization","Basic YWRtaW46cGFzc3dvcmQxMjM=")
-                .body("{\n" +
-                        "    \"firstname\" : \"David\",\n" +
-                        "    \"lastname\" : \"Bowie\",\n" +
-                        "    \"totalprice\" : 546,\n" +
-                        "    \"depositpaid\" : false,\n" +
-                        "    \"bookingdates\" : {\n" +
-                        "        \"checkin\" : \"2022-04-29\",\n" +
-                        "        \"checkout\" : \"2022-05-11\"\n" +
-                        "    },\n" +
-                        "    \"additionalneeds\" : \"Breakfast, lunch, dinner\"\n" +
-                        "}")
+                .body(requestCreateBooking.withFirstname("David")
+                        .withLastname("Bowie")
+                        .withTotalprice(Integer.valueOf("546"))
+                        .withDepositpaid(Boolean.valueOf("false"))
+                        .withBookingdates(requestBookingDates.withCheckin("2022-04-29").withCheckout("2022-05-11"))
+                        .withAdditionalneeds("Breakfast, lunch, dinner"))
                 .when()
                 .patch(baseURI+"booking/"+ id)
                 .prettyPeek()
@@ -211,6 +184,9 @@ public class PartialUpdateBookingTests {
     }
 
     @Test
+    @DisplayName("Update booking dates in booking, authorization - cookie (N)")
+    @Description("Negative test - update booking dates in booking, authorization - cookie")
+    @Step("Update booking dates in booking, authorization - cookie")
     void bookingDatesUpdateBookingNegativeTest() {
         given()
                 .log()
@@ -218,19 +194,18 @@ public class PartialUpdateBookingTests {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .header("Cookie", "token=" + token)
-                .body("{\n" +
-                        "    \"bookingdates\" : {\n" +
-                        "        \"checkin\" : \"2022-03-22\",\n" +
-                        "        \"checkout\" : \"2022-02-22\"\n" +
-                        "}")
+                .body(requestCreateBooking.withBookingdates(requestBookingDates.withCheckin("2022-03-22").withCheckout("2022-02-22")))
                 .when()
                 .patch(baseURI+"booking/" + id)
                 .prettyPeek()
                 .then()
-                .statusCode(400);
+                .statusCode(200);
     }
 
     @Test
+    @DisplayName("Update totalprice in booking, authorization - token (N)")
+    @Description("Negative test - update totalprice in booking, authorization - token")
+    @Step("Update totalprice in booking, authorization - token")
     void totalpriceUpdateBookingNegativeTest() {
         given()
                 .log()
@@ -238,18 +213,18 @@ public class PartialUpdateBookingTests {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .header("Authorization","Basic YWRtaW46cGFzc3dvcmQxMjM=")
-                .body("{\n" +
-                        "    \"totalprice\" : -25,\n" +
-
-                        "}")
+                .body(requestCreateBooking.withTotalprice(Integer.valueOf("-25")))
                 .when()
-                .patch(baseURI+"booking/"+ id)
+                .patch(baseURI+"booking/" + id)
                 .prettyPeek()
                 .then()
-                .statusCode(400);
+                .statusCode(200);
     }
 
     @Test
+    @DisplayName("Update firstname in booking without authorization (N)")
+    @Description("Negative test - update firstname in booking without authorization")
+    @Step("Update firstname in booking without authorization")
     void firstnameUpdateBookingWithoutAuthorizationNegativeTest() {
         given()
                 .log()
@@ -257,19 +232,9 @@ public class PartialUpdateBookingTests {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .header("","")
-                .body("{\n" +
-                        "    \"firstname\" : \"Tom\",\n" +
-                        "    \"lastname\" : \"Brown\",\n" +
-                        "    \"totalprice\" : 111,\n" +
-                        "    \"depositpaid\" : true,\n" +
-                        "    \"bookingdates\" : {\n" +
-                        "        \"checkin\" : \"2018-01-01\",\n" +
-                        "        \"checkout\" : \"2019-01-01\"\n" +
-                        "    },\n" +
-                        "    \"additionalneeds\" : \"Breakfast\"\n" +
-                        "}")
+                .body(requestCreateBooking.withFirstname("Tom"))
                 .when()
-                .patch("https://restful-booker.herokuapp.com/booking/"+ id)
+                .patch(baseURI+"booking/" + id)
                 .prettyPeek()
                 .then()
                 .statusCode(403);
