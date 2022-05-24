@@ -1,5 +1,6 @@
 package ru.ValentinaKarnaukh.tests;
 
+import com.github.javafaker.Faker;
 import io.restassured.RestAssured;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
@@ -13,7 +14,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-import static io.restassured.RestAssured.baseURI;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
@@ -27,28 +27,29 @@ public class DeleteBookingTests {
     static Properties properties = new Properties();
     static String token;
     String id;
+    static Faker faker = new Faker();
 
     @BeforeAll
 
     static void beforeAll() throws IOException {
         properties.load(new FileInputStream(PROPERTIES_FILE_PATH));
-        baseURI = properties.getProperty("base.url");
+        RestAssured.baseURI = properties.getProperty("base.url");
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
         requestBookingDates = Bookingdates.builder()
-                .checkin("2018-01-01")
-                .checkout("2019-01-01")
+                .checkin(properties.getProperty("checkin"))
+                .checkout(properties.getProperty("checkout"))
                 .build();
         request = CreateTokenRequest.builder()
-                .username("admin")
-                .password("password123")
+                .username(properties.getProperty("username"))
+                .password(properties.getProperty("password"))
                 .build();
         requestCreateBooking = CreateBookingRequest.builder()
-                .firstname("Jim")
-                .lastname("Brown")
-                .totalprice(Integer.valueOf("111"))
-                .depositpaid(Boolean.valueOf("true"))
+                .firstname(faker.name().firstName())
+                .lastname(faker.name().lastName())
+                .totalprice(faker.hashCode())
+                .depositpaid(faker.bool().bool())
                 .bookingdates(requestBookingDates)
-                .additionalneeds("Breakfast")
+                .additionalneeds(faker.chuckNorris().fact())
                 .build();
         token = given()
                 .log()
@@ -59,7 +60,7 @@ public class DeleteBookingTests {
                 .statusCode(200)
                 .body("token", is(Matchers.not(nullValue())))
                 .when()
-                .post(baseURI+"auth")
+                .post("auth")
                 .prettyPeek()
                 .body()
                 .jsonPath()
@@ -77,7 +78,7 @@ public class DeleteBookingTests {
                 .expect()
                 .statusCode(200)
                 .when()
-                .post(baseURI+"booking")
+                .post("booking")
                 .prettyPeek()
                 .body()
                 .jsonPath()
@@ -94,7 +95,7 @@ public class DeleteBookingTests {
                 .all()
                 .header("Cookie","token=" +token)
                 .when()
-                .delete(baseURI+"booking/"+ id)
+                .delete("booking/"+ id)
                 .prettyPeek()
                 .then()
                 .statusCode(201);
@@ -107,7 +108,7 @@ public class DeleteBookingTests {
                 .all()
                 .header("Authorization","Basic YWRtaW46cGFzc3dvcmQxMjM=")
                 .when()
-                .delete(baseURI+"booking/"+ id)
+                .delete("booking/"+ id)
                 .prettyPeek()
                 .then()
                 .statusCode(201);
@@ -120,7 +121,7 @@ public class DeleteBookingTests {
                 .all()
                 .header("","")
                 .when()
-                .delete(baseURI+"booking/"+ id)
+                .delete("booking/"+ id)
                 .prettyPeek()
                 .then()
                 .statusCode(403);

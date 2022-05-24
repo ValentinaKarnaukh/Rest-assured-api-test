@@ -12,7 +12,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-import static io.restassured.RestAssured.baseURI;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -20,20 +19,20 @@ import static org.hamcrest.Matchers.*;
 public class CreateTokenTests {
     private static final String PROPERTIES_FILE_PATH = "src/test/resources/application.properties";
     private static CreateTokenRequest request;
+    private static CreateTokenResponse response;
     static Properties properties = new Properties();
 
 
     @BeforeAll
     static void beforeAll() throws IOException {
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+        properties.load(new FileInputStream(PROPERTIES_FILE_PATH));
+        RestAssured.baseURI = properties.getProperty("base.url");
 
         request = CreateTokenRequest.builder()
                 .username("admin")
                 .password("password123")
                 .build();
-
-        properties.load(new FileInputStream(PROPERTIES_FILE_PATH));
-        baseURI = properties.getProperty("base.url");
     }
 
     @Test
@@ -50,7 +49,7 @@ public class CreateTokenTests {
                 .expect()
                 .statusCode(200)
                 .when()
-                .post(baseURI+"auth")
+                .post("auth")
                 .prettyPeek()
                 .then()
                 .extract()
@@ -71,7 +70,7 @@ public class CreateTokenTests {
                 .header("Content-Type","application/json")
                 .body(request.withPassword("password"))
                 .when()
-                .post(baseURI+"auth")
+                .post("auth")
                 .prettyPeek()
                 .then()
                 .statusCode(200)
@@ -92,7 +91,7 @@ public class CreateTokenTests {
                 .header("Content-Type", "application/json")
                 .body(request.withUsername("admin123"))
                 .when()
-                .post(baseURI+"auth")
+                .post("auth")
                 .prettyPeek();
         assertThat(response.statusCode(), equalTo(200));
         assertThat(response.body().jsonPath().get("reason"), containsStringIgnoringCase("Bad credentials"));
